@@ -1,101 +1,96 @@
 const express = require("express");
 
+const User = require("./models/user");
+const connectDB = require("./config/database");
 const app = express();
 
-// app.use("/",(req,res)=>{
-//     res.send("Hello from dashboard");
-// });
-// order matters here - top ->bottom this will always run (in any route)
-
-// app.get("/user",(req,res)=>{
-//     res.send("Data fetched successfully");
-// })
-
-// app.post("/user",(req,res)=>{
-//     res.send({firstName:"Prince", lastName: "Anand"});
-// })
-// app.delete("/user",(req,res)=>{
-//     console.log("Deleted Successfully");
-//     res.send("Deleted");
-// })
-// app.patch("/user",(req,res)=>{
-//     res.send("Updated Successfully");
-// })
-
-// Old way - express4
-// app.get("/a(bc)?d",(req,res)=>{
-//     res.send("Data fetched successfully");
-// })
-
-// New Way - regex path
-// app.get(/^\/a(bc)?d$/,(req,res)=>{
-//     res.send("bc is optional here");
-// })
-// app.get(/^\/a(bc)+d$/,(req,res)=>{
-//     res.send("bc can be any no of time here");
-// })
-// app.get(/^\/.*fly$/,(req,res)=>{
-//     res.send("end with fly");
-// })
-
-// app.use("/test", (req, res) => {
-//   res.send("Hello from server");
-// });
-// app.use("/hello",(req,res)=>{
-//     res.send("Hello from hello");
-// });
-
-// app.use("/",(req,res)=>{
-//     res.send("Hello from dashboard");
-// });
-// works here
-// **** order of route is very ipmortant
+app.use(express.json());
 
 
-// Next lecture
+app.post("/signup", async (req, res) => {
+  console.log(req.body);
 
-// app.use("/user",
-//   (req,res,next)=>{
-//   console.log("1st response Handler")
-//   // res.send("Response");
-//   next();
-//   },
-//   (req,res,next)=>{
-//   console.log("2nd response Handler")
-//   // res.send("2nd Response");
-//   next();
-// },
-// (req,res,next)=>{
-//   console.log("3rd response Handler"); // hang here if no send in 3rd from 2nd next
-//   res.send("3rd Response");
-//   // next(); // error cannot get cz no handler defined
-//   }
-
-// );
-
-// app.use("route",[rh1,rh2,rh3]);
-
-app.use("/",[
-  (req,res,next)=>{
-  console.log("1st response Handler")
-  // res.send("Response");
-  next();
-  },
-  (req,res,next)=>{
-  console.log("2nd response Handler")
-  // res.send("2nd Response");
-  next();
-}],
-(req,res,next)=>{
-  console.log("3rd response Handler"); // hang here if no send in 3rd from 2nd next
-  res.send("3rd Response");
-  // next(); // error cannot get cz no handler defined
+  const userdata = new User(req.body);
+  //  const userdata = new User({
+  //   firstName: 1234,
+  //   lastName: "Anand1",
+  //   email: "pk@gmial.com",
+  //   password: "1234"
+  // })
+  try {
+    await userdata.save();
+    res.send("Added one User");
+  } catch (err) {
+    res.status(400).send("Error in DB saving :" + err.message);
   }
-);
-
-// HW from lect 5 last 30 min
-
-
-app.listen(3000, () => {
-  console.log("Listening to port request on Port 3000");
 });
+
+app.get("/user", async (req, res) => {
+  const emailId = req.body.email;
+  try {
+    const user = await User.find({ email: emailId });
+    if (user.length === 0) res.status(404).send("User not found");
+    else res.send(user);
+  } catch (err) {
+    res.send(400).send("Something went wrong");
+  }
+});
+
+// app.get("/one", async (req, res) => {
+  
+//   try {
+//     const user = await User.findOne({email: req.body.email});
+//     res.send(user);
+//   } catch (err) {
+//     res.send(400).send("Something went wrong");
+//   }
+// });
+
+app.get("/feed", async (req, res) => {
+  try {
+    const user = await User.find({});
+    res.send(user);
+  } catch (err) {
+    res.send(400).send("Something went wrong");
+  }
+});
+
+app.delete("/user", async (req,res)=>{
+  const userId=req.body.uid;
+  
+  try {
+    await User.findByIdAndDelete(userId);
+    res.send("Deleted User")
+  } catch (err) {
+    res.send(400).send("Something went wrong");
+  }
+})
+
+
+app.patch("/user", async (req,res)=>{
+  const userId=req.body.uid;
+  
+  try {
+    await User.findByIdAndUpdate(userId,req.body,{
+      returnDocument: "before"
+    });
+    res.send("Updated User")
+  } catch (err) {
+    res.send(400).send("Something went wrong");
+  }
+})
+
+
+
+
+
+connectDB()
+  .then(() => {
+    console.log("DB Connection established...");
+    app.listen(3000, () => {
+      console.log("Listening to port request on Port 3000");
+    });
+  })
+  .catch((err) => {
+    console.log("Error!!");
+  });
