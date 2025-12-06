@@ -1,5 +1,7 @@
 const express = require("express");
-
+const { validateSignUpData } = require("./helper/validate");
+const bcrypt = require("bcrypt")
+const validator = require("validator");
 const User = require("./models/user");
 const connectDB = require("./config/database");
 const app = express();
@@ -9,20 +11,52 @@ app.use(express.json());
 app.post("/signup", async (req, res) => {
   console.log(req.body);
 
-  const userdata = new User(req.body);
   //  const userdata = new User({
-  //   firstName: 1234,
-  //   lastName: "Anand1",
+    //   firstName: 1234,
+    //   lastName: "Anand1",
   //   email: "pk@gmial.com",
   //   password: "1234"
   // })
   try {
+    validateSignUpData(req);
+    const {firstName, lastName, email, password} = req.body;
+
+    const passwordHash = await bcrypt.hash(password,10);
+    const userdata = new User({
+      firstName, lastName, email, password: passwordHash
+    });
+    //only 4 field gets added
+
     await userdata.save();
     res.send("Added one User");
   } catch (err) {
     res.status(400).send("Error in DB saving :" + err.message);
   }
 });
+
+app.post("/login", async (req,res)=>{
+  try{
+    const {email, password}= req.body;
+    if (!validator.isEmail(email)){
+      throw new Error("Email not valid");
+      // but never reveal that email exist or not, keep it general error ,-> same for other api too
+    }
+    const user = await User.findOne({email});
+    if (!user) throw new Error("Email not found");
+
+    console.log(user.password)
+    const isValidPass = await bcrypt.compare(password,user.password);
+    if (isValidPass){
+      res.send("Login Successfull");
+
+    }else{
+      throw new Error("Invalid pass Credetial")
+    }
+  }
+  catch(err){
+    res.status(400).end("Error: "+err.message);
+  }
+})
 
 app.get("/user", async (req, res) => {
   const emailId = req.body.email;
