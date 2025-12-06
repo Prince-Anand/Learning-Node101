@@ -6,7 +6,6 @@ const app = express();
 
 app.use(express.json());
 
-
 app.post("/signup", async (req, res) => {
   console.log(req.body);
 
@@ -37,7 +36,7 @@ app.get("/user", async (req, res) => {
 });
 
 // app.get("/one", async (req, res) => {
-  
+
 //   try {
 //     const user = await User.findOne({email: req.body.email});
 //     res.send(user);
@@ -55,34 +54,47 @@ app.get("/feed", async (req, res) => {
   }
 });
 
-app.delete("/user", async (req,res)=>{
-  const userId=req.body.uid;
-  
+app.delete("/user", async (req, res) => {
+  const userId = req.body.uid;
+
   try {
     await User.findByIdAndDelete(userId);
-    res.send("Deleted User")
+    res.send("Deleted User");
   } catch (err) {
     res.send(400).send("Something went wrong");
   }
-})
+});
 
+app.patch("/user/:uid", async (req, res) => {
+  const userId = req.params?.uid;
 
-app.patch("/user", async (req,res)=>{
-  const userId=req.body.uid;
-  
   try {
-    await User.findByIdAndUpdate(userId,req.body,{
-      returnDocument: "before"
+    const data = req.body;
+    const ALLOWED_UPDATES = [
+      "photoUrl",
+      "about",
+      "gender",
+      "skills",
+      "firstName",
+      "lastName",
+      "age",
+    ];
+    const isUpdateAllowed = Object.keys(data).every((k) => {
+      return ALLOWED_UPDATES.includes(k);
     });
-    res.send("Updated User")
+    if (!isUpdateAllowed) {
+      throw new Error("Not allowed to update these fields");
+    }
+    await User.findByIdAndUpdate(userId, req.body, {
+      returnDocument: "before",
+      runValidators: true,
+      // runs validator explicitly for patch req
+    });
+    res.send("Updated User");
   } catch (err) {
-    res.send(400).send("Something went wrong");
+    res.status(400).send("Something went wrong : " + err.message);
   }
-})
-
-
-
-
+});
 
 connectDB()
   .then(() => {
