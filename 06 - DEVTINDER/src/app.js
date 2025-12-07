@@ -5,8 +5,11 @@ const validator = require("validator");
 const User = require("./models/user");
 const connectDB = require("./config/database");
 const app = express();
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.post("/signup", async (req, res) => {
   console.log(req.body);
@@ -47,6 +50,20 @@ app.post("/login", async (req,res)=>{
     console.log(user.password)
     const isValidPass = await bcrypt.compare(password,user.password);
     if (isValidPass){
+
+      //create jwt token 
+
+      const token = await jwt.sign({_id : user._id},"#Secret@Key1ForDevTinder");
+
+      // add it to cookie and send response to use
+
+      res.cookie("token",token);
+      // console.log(cookie)
+
+
+      // req.cookies;
+
+
       res.send("Login Successfull");
 
     }else{
@@ -57,6 +74,36 @@ app.post("/login", async (req,res)=>{
     res.status(400).end("Error: "+err.message);
   }
 })
+
+app.get("/profile", async (req,res)=>{
+  try{
+    // const cookies = req.cookies;
+  const {token} = req.cookies;
+  if (!token){
+    throw new Error("Invalid token");
+  }
+  
+  const decoded = await jwt.verify(token,"#Secret@Key1ForDevTinder");
+  // if (!decoded){
+  //   throw new Error("Please Login Again");
+    
+  // }
+  const {_id} = decoded;
+  console.log(_id);
+  const user = await User.findById(_id);
+  if (!user){
+    
+    throw new Error("Please Login Again");
+  }
+  console.log(token);
+  res.send("Logged User is "+user.firstName);
+  }
+  catch(err){
+    res.status(400).send("Something went wrong : "+ err.message);
+  }
+
+})
+
 
 app.get("/user", async (req, res) => {
   const emailId = req.body.email;
