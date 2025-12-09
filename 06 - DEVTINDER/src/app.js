@@ -23,7 +23,7 @@ app.post("/signup", async (req, res) => {
   // })
   try {
     validateSignUpData(req);
-    const { firstName, lastName, email, password} = req.body;
+    const { firstName, lastName, email, password } = req.body;
 
     const passwordHash = await bcrypt.hash(password, 10);
     const userdata = new User({
@@ -52,20 +52,24 @@ app.post("/login", async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) throw new Error("Email not found");
 
-    console.log(user.password);
-    const isValidPass = await bcrypt.compare(password, user.password);
+    // console.log(user.password);
+    const isValidPass = await user.validatePassword(password);
     if (isValidPass) {
       //create jwt token
 
-      const token = await jwt.sign(
-        { _id: user._id },
-        "#Secret@Key1ForDevTinder",
-        {expiresIn : "7d"}
-      );
+      // const token = await jwt.sign(
+      //   { _id: user._id },
+      //   "#Secret@Key1ForDevTinder",
+      //   {expiresIn : "7d"}
+      // );
+      const token = await user.getJWT();
 
       // add it to cookie and send response to use
 
-      res.cookie("token", token,{ expires: new Date(Date.now() +  7 * 24 * 3600000), httpOnly: true });
+      res.cookie("token", token, {
+        expires: new Date(Date.now() + 7 * 24 * 3600000),
+        httpOnly: true,
+      });
       // console.log(cookie)
 
       // req.cookies;
