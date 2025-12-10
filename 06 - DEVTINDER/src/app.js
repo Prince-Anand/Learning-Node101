@@ -42,46 +42,46 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-app.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    if (!validator.isEmail(email)) {
-      throw new Error("Email not valid");
-      // but never reveal that email exist or not, keep it general error ,-> same for other api too
-    }
-    const user = await User.findOne({ email });
-    if (!user) throw new Error("Email not found");
+// app.post("/login", async (req, res) => {
+//   try {
+//     const { email, password } = req.body;
+//     if (!validator.isEmail(email)) {
+//       throw new Error("Email not valid");
+//       // but never reveal that email exist or not, keep it general error ,-> same for other api too
+//     }
+//     const user = await User.findOne({ email });
+//     if (!user) throw new Error("Email not found");
 
-    // console.log(user.password);
-    const isValidPass = await user.validatePassword(password);
-    if (isValidPass) {
-      //create jwt token
+//     // console.log(user.password);
+//     const isValidPass = await user.validatePassword(password);
+//     if (isValidPass) {
+//       //create jwt token
 
-      // const token = await jwt.sign(
-      //   { _id: user._id },
-      //   "#Secret@Key1ForDevTinder",
-      //   {expiresIn : "7d"}
-      // );
-      const token = await user.getJWT();
+//       // const token = await jwt.sign(
+//       //   { _id: user._id },
+//       //   "#Secret@Key1ForDevTinder",
+//       //   {expiresIn : "7d"}
+//       // );
+//       const token = await user.getJWT();
 
-      // add it to cookie and send response to use
+//       // add it to cookie and send response to use
 
-      res.cookie("token", token, {
-        expires: new Date(Date.now() + 7 * 24 * 3600000),
-        httpOnly: true,
-      });
-      // console.log(cookie)
+//       res.cookie("token", token, {
+//         expires: new Date(Date.now() + 7 * 24 * 3600000),
+//         httpOnly: true,
+//       });
+//       // console.log(cookie)
 
-      // req.cookies;
+//       // req.cookies;
 
-      res.send("Login Successfull");
-    } else {
-      throw new Error("Invalid pass Credetial");
-    }
-  } catch (err) {
-    res.status(400).end("Error: " + err.message);
-  }
-});
+//       res.send("Login Successfull");
+//     } else {
+//       throw new Error("Invalid pass Credetial");
+//     }
+//   } catch (err) {
+//     res.status(400).end("Error: " + err.message);
+//   }
+// });
 
 app.get("/profile", userAuth, async (req, res) => {
   try {
