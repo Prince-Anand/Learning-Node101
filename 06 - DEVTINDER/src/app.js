@@ -1,46 +1,53 @@
 const express = require("express");
-const { validateSignUpData } = require("./helper/validate");
-const bcrypt = require("bcrypt");
-const validator = require("validator");
-const User = require("./models/user");
+// const { validateSignUpData } = require("./helper/validate");
+// const bcrypt = require("bcrypt");
+// const validator = require("validator");
+// const User = require("./models/user");
 const connectDB = require("./config/database");
 const app = express();
 const cookieParser = require("cookie-parser");
-const jwt = require("jsonwebtoken");
+// const jwt = require("jsonwebtoken");
 const { userAuth } = require("./middlewares/auth");
+const authRouter = require("./routes/auth");
+const profileAuth = require("./routes/profile");
+const requestRouter = require("./routes/request");
 
 app.use(express.json());
 app.use(cookieParser());
 
-app.post("/signup", async (req, res) => {
-  console.log(req.body);
+app.use("/",authRouter);
+app.use("/",profileAuth);
+app.use("/",requestRouter);
+// --------------------------------------- Earlier without Routes -----------------------------------------------------
+// app.post("/signup", async (req, res) => {
+//   console.log(req.body);
 
-  //  const userdata = new User({
-  //   firstName: 1234,
-  //   lastName: "Anand1",
-  //   email: "pk@gmial.com",
-  //   password: "1234"
-  // })
-  try {
-    validateSignUpData(req);
-    const { firstName, lastName, email, password } = req.body;
+//   //  const userdata = new User({
+//   //   firstName: 1234,
+//   //   lastName: "Anand1",
+//   //   email: "pk@gmial.com",
+//   //   password: "1234"
+//   // })
+//   try {
+//     validateSignUpData(req);
+//     const { firstName, lastName, email, password } = req.body;
 
-    const passwordHash = await bcrypt.hash(password, 10);
-    const userdata = new User({
-      firstName,
-      lastName,
-      email,
-      password: passwordHash,
-      // photoUrl
-    });
-    //only 4 field gets added
+//     const passwordHash = await bcrypt.hash(password, 10);
+//     const userdata = new User({
+//       firstName,
+//       lastName,
+//       email,
+//       password: passwordHash,
+//       // photoUrl
+//     });
+//     //only 4 field gets added
 
-    await userdata.save();
-    res.send("Added one User");
-  } catch (err) {
-    res.status(400).send("Error in DB saving :" + err.message);
-  }
-});
+//     await userdata.save();
+//     res.send("Added one User");
+//   } catch (err) {
+//     res.status(400).send("Error in DB saving :" + err.message);
+//   }
+// });
 
 // app.post("/login", async (req, res) => {
 //   try {
@@ -83,46 +90,46 @@ app.post("/signup", async (req, res) => {
 //   }
 // });
 
-app.get("/profile", userAuth, async (req, res) => {
-  try {
-    // **done in middleware**
-    // const cookies = req.cookies;
-    // const {token} = req.cookies;
-    // if (!token){
-    //   throw new Error("Invalid token");
-    // }
+// app.get("/profile", userAuth, async (req, res) => {
+//   try {
+//     // **done in middleware**
+//     // const cookies = req.cookies;
+//     // const {token} = req.cookies;
+//     // if (!token){
+//     //   throw new Error("Invalid token");
+//     // }
 
-    // const decoded = await jwt.verify(token,"#Secret@Key1ForDevTinder");
-    // if (!decoded){
-    //   throw new Error("Please Login Again");
+//     // const decoded = await jwt.verify(token,"#Secret@Key1ForDevTinder");
+//     // if (!decoded){
+//     //   throw new Error("Please Login Again");
 
-    // }
-    // const {_id} = decoded;
-    // console.log(_id);
-    // const user = await User.findById(_id);
-    // if (!user){
+//     // }
+//     // const {_id} = decoded;
+//     // console.log(_id);
+//     // const user = await User.findById(_id);
+//     // if (!user){
 
-    //   throw new Error("Please Login Again");
-    // }
-    // console.log(token);
-    const user = req.user; // from middleware
-    console.log("Logged User is " + user.firstName);
-    res.send(user);
-  } catch (err) {
-    res.status(400).send("Something went wrong : " + err.message);
-  }
-});
+//     //   throw new Error("Please Login Again");
+//     // }
+//     // console.log(token);
+//     const user = req.user; // from middleware
+//     console.log("Logged User is " + user.firstName);
+//     res.send(user);
+//   } catch (err) {
+//     res.status(400).send("Something went wrong : " + err.message);
+//   }
+// });
 
-app.get("/user", async (req, res) => {
-  const emailId = req.body.email;
-  try {
-    const user = await User.find({ email: emailId });
-    if (user.length === 0) res.status(404).send("User not found");
-    else res.send(user);
-  } catch (err) {
-    res.send(400).send("Something went wrong");
-  }
-});
+// app.get("/user", async (req, res) => {
+//   const emailId = req.body.email;
+//   try {
+//     const user = await User.find({ email: emailId });
+//     if (user.length === 0) res.status(404).send("User not found");
+//     else res.send(user);
+//   } catch (err) {
+//     res.send(400).send("Something went wrong");
+//   }
+// });
 
 // app.get("/one", async (req, res) => {
 
@@ -134,56 +141,57 @@ app.get("/user", async (req, res) => {
 //   }
 // });
 
-app.get("/feed", async (req, res) => {
-  try {
-    const user = await User.find({});
-    res.send(user);
-  } catch (err) {
-    res.send(400).send("Something went wrong");
-  }
-});
+// app.get("/feed", async (req, res) => {
+//   try {
+//     const user = await User.find({});
+//     res.send(user);
+//   } catch (err) {
+//     res.send(400).send("Something went wrong");
+//   }
+// });
 
-app.delete("/user", async (req, res) => {
-  const userId = req.body.uid;
+// app.delete("/user", async (req, res) => {
+//   const userId = req.body.uid;
 
-  try {
-    await User.findByIdAndDelete(userId);
-    res.send("Deleted User");
-  } catch (err) {
-    res.send(400).send("Something went wrong");
-  }
-});
+//   try {
+//     await User.findByIdAndDelete(userId);
+//     res.send("Deleted User");
+//   } catch (err) {
+//     res.send(400).send("Something went wrong");
+//   }
+// });
 
-app.patch("/user/:uid", async (req, res) => {
-  const userId = req.params?.uid;
+// app.patch("/user/:uid", async (req, res) => {
+//   const userId = req.params?.uid;
 
-  try {
-    const data = req.body;
-    const ALLOWED_UPDATES = [
-      "photoUrl",
-      "about",
-      "gender",
-      "skills",
-      "firstName",
-      "lastName",
-      "age",
-    ];
-    const isUpdateAllowed = Object.keys(data).every((k) => {
-      return ALLOWED_UPDATES.includes(k);
-    });
-    if (!isUpdateAllowed) {
-      throw new Error("Not allowed to update these fields");
-    }
-    await User.findByIdAndUpdate(userId, req.body, {
-      returnDocument: "before",
-      runValidators: true,
-      // runs validator explicitly for patch req
-    });
-    res.send("Updated User");
-  } catch (err) {
-    res.status(400).send("Something went wrong : " + err.message);
-  }
-});
+//   try {
+//     const data = req.body;
+//     const ALLOWED_UPDATES = [
+//       "photoUrl",
+//       "about",
+//       "gender",
+//       "skills",
+//       "firstName",
+//       "lastName",
+//       "age",
+//     ];
+//     const isUpdateAllowed = Object.keys(data).every((k) => {
+//       return ALLOWED_UPDATES.includes(k);
+//     });
+//     if (!isUpdateAllowed) {
+//       throw new Error("Not allowed to update these fields");
+//     }
+//     await User.findByIdAndUpdate(userId, req.body, {
+//       returnDocument: "before",
+//       runValidators: true,
+//       // runs validator explicitly for patch req
+//     });
+//     res.send("Updated User");
+//   } catch (err) {
+//     res.status(400).send("Something went wrong : " + err.message);
+//   }
+// });
+// --------------------------------------------------------------------------------------------------------------------
 
 connectDB()
   .then(() => {

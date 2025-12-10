@@ -1,6 +1,6 @@
 const express = require("express");
 const authRouter = express.Router();
-const jwt = require("jsonwebtoken");
+// const jwt = require("jsonwebtoken");
 const validator = require("validator");
 const { validateSignUpData } = require("../helper/validate");
 const bcrypt = require("bcrypt");
@@ -61,3 +61,17 @@ authRouter.post("/login", async (req, res) => {
     res.status(400).end("Error: " + err.message);
   }
 });
+
+authRouter.post(
+  "/logout", (req, res) => {
+    // res.clearCookie("token");
+    // or i can set cookie with 0 expires time
+    res.cookie("token",null,{
+      expires : new Date(Date.now())
+    })
+    res.send("Logged out Successfully");
+  }
+)
+
+
+module.exports = authRouter;
